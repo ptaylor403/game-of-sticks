@@ -12,7 +12,7 @@ def is_ai():
             continue
 
 def turn(sticks, player):
-    print("\n{}, it's your turn!".format(player))
+    print("{}, it's your turn!".format(player))
     while True:
         try:
             pick_up = int(input("You can pick up 1, 2, or 3 sticks. \nHow many do you want?: "))
@@ -33,11 +33,11 @@ def stick_count(sticks, player):
     return sticks
 
 def show_board(sticks):
-    print("\nThere are {} sticks on the board".format(sticks))
+    print("\nThere are {} sticks on the board\n".format(sticks))
 
-def is_end(sticks, player):
+def is_end(sticks, player, player_name):
     if player == sticks:
-        print("\nYou lose!")
+        print("\n{}, you lose!".format(player_name))
         return True
     else:
         return False
@@ -46,35 +46,50 @@ def person_game_loop(sticks):
     while sticks > 0:
         show_board(sticks)
         player1 = turn(sticks, "Player1")
-        if is_end(sticks, player1):
+        if is_end(sticks, player1, "Player1"):
             return
         sticks = stick_count(sticks, player1)
         show_board(sticks)
         player2 = turn(sticks, "Player2")
-        if is_end(sticks, player2):
+        if is_end(sticks, player2, "Player2"):
             return
         sticks = stick_count(sticks, player2)
 
-def ai_turn(sticks):
+def ai_turn(sticks, ai_dict):
     print("It's the computer's turn.")
     while True:
-        pick_up = random.choice(range(1,4))
+        pick_up = random.choice(ai_dict[sticks])
         if sticks < pick_up:
             continue
         else:
             print("You can pick up 1, 2, or 3 sticks. \nHow many do you want?: {}".format(pick_up))
             return pick_up
 
-def ai_game_loop(sticks):
+def make_ai_memory(sticks, ai_choices):
+    ai_dict = {}
+    for stick in range(1, sticks):
+        ai_dict[stick] = [1, 2, 3]
+    print("AI Choices ", ai_choices)
+    for key in ai_choices:
+        if key in ai_dict:
+            ai_dict[key].append(ai_choices[key])
+        else:
+            ai_dict[key] = [1,2,3, ai_choices[key]]
+    return ai_dict
+
+def ai_game_loop(sticks, ai_choices={}):
+    ai_dict = make_ai_memory(sticks, ai_choices)
+    print(ai_dict)
     while sticks > 0:
         show_board(sticks)
         player1 = turn(sticks, "Player1")
-        if is_end(sticks, player1):
-            return
+        if is_end(sticks, player1, "Player1"):
+            return ai_choices
         sticks = stick_count(sticks, player1)
         show_board(sticks)
-        ai = ai_turn(sticks)
-        if is_end(sticks, ai):
+        ai = ai_turn(sticks, ai_dict)
+        ai_choices[sticks] = ai
+        if is_end(sticks, ai, "Computer"):
             return
         sticks = stick_count(sticks, ai)
 
@@ -82,18 +97,16 @@ def play_again():
     again = input("\nWould you like to play again? Y/n ").lower()
     return again == 'y'
 
-def show_result(state):
-    if state:
-        print("I'm sorry, you lost")
-
 def main():
     again = True
+    ai_info = {}
     while again:
         sticks = random.choice(range(1, 30))
         if is_ai():
-            state = ai_game_loop(sticks)
+            ai_dict = make_ai_memory(sticks, ai_info)
+            ai_info = ai_game_loop(sticks, ai_info)
         else:
-            state = person_game_loop(sticks)
+            person_game_loop(sticks)
         again = play_again()
 
 if __name__ == '__main__':
